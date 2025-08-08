@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono-Forge: Temporal Alchemist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1e24;
+            color: #e0e0e0;
+            font-family: 'Press Start 2P', cursive;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background-color: #282c34;
+            border: 8px solid #61dafb;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(97, 218, 251, 0.6);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 95%;
+            width: 800px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #61dafb;
+            margin-bottom: 25px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+            color: #a0a0a0;
+            background-color: #3a404d;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            color: #f0f0f0;
+            font-size: 1.3em;
+        }
+
+        .time-zones, .game-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .current-zone {
+            font-size: 1.4em;
+            color: #f0f0f0;
+            margin-bottom: 20px;
+            background-color: #4a515e;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #61dafb;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+
+        .inventory-display {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #3a404d;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .essence-slot {
+            background-color: #1a1e24;
+            border: 2px dashed #555;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            height: 80px;
+            position: relative;
+        }
+
+        .essence-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.7em;
+            color: #f0f0f0;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+
+        .discard-button {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background-color: #f44336; /* Red for discard */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            line-height: 1; /* Adjust line height for better centering */
+            padding: 0;
+        }
+
+        .discard-button:hover {
+            background-color: #d32f2f;
+        }
+
+        .discard-button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        .current-recipe {
+            background-color: #3a404d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .recipe-title {
+            font-size: 1.5em;
+            color: #f0f0f0;
+            margin-bottom: 10px;
+        }
+
+        .recipe-requirements {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .requirement-item {
+            background-color: #1a1e24;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            font-size: 1em;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .requirement-item.met {
+            border-color: #4CAF50;
+            background-color: #2e4d30;
+        }
+
+        .game-message {
+            margin-top: 20px;
+            font-size: 1.4em;
+            color: #ff6b6b;
+            text-align: center;
+            display: none;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            border: 2px solid #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.7);
+        }
+
+        .control-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .control-button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-button:active {
+            background-color: #3e8e41;
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-button.disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .control-button.time-zone-button {
+            background-color: #3f51b5; /* Blue for time zones */
+        }
+        .control-button.time-zone-button:hover {
+            background-color: #303f9f;
+        }
+        .control-button.time-zone-button:active {
+            background-color: #283593;
+        }
+
+        .control-button.gather-button {
+            background-color: #ff9800; /* Orange for gather */
+        }
+        .control-button.gather-button:hover {
+            background-color: #fb8c00;
+        }
+        .control-button.gather-button:active {
+            background-color: #f57c00;
+        }
+
+        .control-button.forge-button {
+            background-color: #9c27b0; /* Purple for forge */
+        }
+        .control-button.forge-button:hover {
+            background-color: #8e24aa;
+        }
+        .control-button.forge-button:active {
+            background-color: #7b1fa2;
+        }
+
+        .control-button.mini-game-button {
+            background-color: #00bcd4; /* Cyan for mini-games */
+        }
+        .control-button.mini-game-button:hover {
+            background-color: #00acc1;
+        }
+        .control-button.mini-game-button:active {
+            background-color: #0097a7;
+        }
+
+        .forged-artifacts-section {
+            width: 100%;
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #3a404d;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .forged-artifacts-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            min-height: 50px; /* Ensure space even when empty */
+        }
+
+        .forged-artifact-icon {
+            font-size: 2.5em;
+            padding: 5px;
+            background-color: #1a1e24;
+            border-radius: 8px;
+            border: 2px solid #61dafb;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .forged-artifact-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* --- Temporal Alignment QTE Styles --- */
+        .qte-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none; /* Hidden by default */
+        }
+
+        .qte-box {
+            background-color: #3a404d;
+            border: 4px solid #61dafb;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 25px rgba(97, 218, 251, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .qte-bar-container {
+            width: 100%;
+            height: 30px;
+            background-color: #1a1e24;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #555;
+        }
+
+        .qte-target-zone {
+            position: absolute;
+            height: 100%;
+            background-color: #4CAF50; /* Green target */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30%; /* Increased target zone width for better playability */
+        }
+
+        .qte-indicator {
+            position: absolute;
+            height: 100%;
+            width: 10px; /* Width of the moving indicator */
+            background-color: white;
+            border-radius: 5px;
+            left: 0;
+        }
+
+        .qte-message {
+            font-size: 1.2em;
+            color: #f0f0f0;
+        }
+
+        .qte-align-button {
+            background-color: #ff9800; /* Orange, similar to gather */
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .qte-align-button:hover {
+            background-color: #fb8c00;
+            transform: translateY(-2px);
+        }
+
+        .qte-align-button:active {
+            background-color: #f57c00;
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Temporal Burst Specific Styles --- */
+        #temporalBurstOverlay .burst-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #temporalBurstOverlay .burst-icon {
+            font-size: 5em; /* Larger icon for tapping */
+            cursor: pointer;
+            transition: transform 0.1s ease-out;
+            border: 4px solid #ff9800; /* Orange border */
+            border-radius: 15px;
+            padding: 15px;
+            background-color: #1a1e24;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #temporalBurstOverlay .burst-icon:active {
+            transform: scale(0.9); /* Shrink on click */
+        }
+
+        #temporalBurstOverlay .burst-stats {
+            font-size: 1.2em;
+            color: #a0a0a0;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* --- Forged Arsenal Styles --- */
+        .forged-arsenal-section {
+            width: 100%;
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #3a404d;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .forged-arsenal-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            min-height: 50px;
+        }
+
+        .arsenal-artifact-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #1a1e24;
+            border: 2px solid #61dafb;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            position: relative; /* For cooldown timer */
+        }
+
+        .arsenal-artifact-item:hover:not(.disabled) {
+            transform: translateY(-3px);
+            background-color: #2e323b;
+        }
+
+        .arsenal-artifact-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #555;
+        }
+
+        .arsenal-artifact-icon {
+            font-size: 2.5em;
+        }
+
+        .arsenal-artifact-name {
+            font-size: 0.8em;
+            color: #a0a0a0;
+        }
+
+        .arsenal-cooldown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+        }
+        .arsenal-artifact-item.disabled .arsenal-cooldown {
+            display: block; /* Show cooldown when disabled */
+        }
+
+        .active-powerups-section {
+            width: 100%;
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #3a404d;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .active-powerups-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            min-height: 30px;
+        }
+
+        .active-powerup-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1a1e24;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 1em;
+            color: #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .active-powerup-icon {
+            font-size: 1.5em;
+        }
+
+        .active-powerup-timer {
+            font-size: 0.9em;
+            color: #ffc107;
+        }
+
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.6em;
+            }
+            .game-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .stat-item {
+                flex-direction: row;
+                justify-content: center;
+                gap: 10px;
+            }
+            .stat-value {
+                font-size: 1.1em;
+            }
+            .current-zone {
+                font-size: 1.2em;
+            }
+            .section-title {
+                font-size: 1.1em;
+            }
+            .inventory-display {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 300px;
+            }
+            .essence-slot {
+                font-size: 1.5em;
+                height: 60px;
+            }
+            .recipe-title {
+                font-size: 1.2em;
+            }
+            .requirement-item {
+                font-size: 0.9em;
+                padding: 8px 12px;
+            }
+            .game-message {
+                font-size: 1.1em;
+                padding: 10px;
+            }
+            .control-button {
+                padding: 12px 25px;
+                font-size: 14px;
+            }
+            .forged-artifact-icon {
+                font-size: 2em;
+            }
+            #temporalBurstOverlay .burst-icon {
+                font-size: 4em;
+                padding: 10px;
+            }
+            #temporalBurstOverlay .burst-stats {
+                font-size: 1em;
+            }
+            .arsenal-artifact-item {
+                padding: 8px;
+            }
+            .arsenal-artifact-icon {
+                font-size: 2em;
+            }
+            .arsenal-artifact-name {
+                font-size: 0.7em;
+            }
+            .active-powerup-item {
+                padding: 6px 10px;
+                font-size: 0.9em;
+            }
+            .active-powerup-icon {
+                font-size: 1.2em;
+            }
+            .active-powerup-timer {
+                font-size: 0.8em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.2em;
+            }
+            .control-button {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+            .time-zones, .game-actions {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Chrono-Forge: Temporal Alchemist</h1>
+
+        <div class="game-stats">
+            <div class="stat-item">Temporal Energy: <span id="temporalEnergy" class="stat-value">100</span></div>
+            <div class="stat-item">Time Remaining: <span id="timeRemaining" class="stat-value">120</span>s</div>
+            <div class="stat-item">Artifacts Forged: <span id="artifactsForged" class="stat-value">0</span></div>
+        </div>
+
+        <div class="current-zone">Current Time Zone: <span id="currentZoneDisplay">Temporal Nexus</span></div>
+
+        <div class="section-title">Travel Through Time</div>
+        <div class="time-zones">
+            <button id="prehistoricBtn" class="control-button time-zone-button" data-zone="prehistoric">Prehistoric 🦖</button>
+            <button id="medievalBtn" class="control-button time-zone-button" data-zone="medieval">Medieval 🏰</button>
+            <button id="futuristicBtn" class="control-button time-zone-button" data-zone="futuristic">Futuristic 🚀</button>
+        </div>
+
+        <div class="section-title">Your Inventory</div>
+        <div class="inventory-display" id="inventoryDisplay">
+            <!-- Essence slots will be populated by JS -->
+        </div>
+
+        <div class="section-title">Current Objective</div>
+        <div class="current-recipe" id="currentRecipe">
+            <div class="recipe-title">Forge: <span id="recipeName">Loading...</span></div>
+            <div class="recipe-requirements" id="recipeRequirements">
+                <!-- Recipe requirements will be populated by JS -->
+            </div>
+        </div>
+
+        <div class="game-actions">
+            <button id="gatherEssenceBtn" class="control-button gather-button">Gather Essence ✨</button>
+            <button id="playAlignmentBtn" class="control-button mini-game-button">Temporal Alignment ⏱️</button>
+            <button id="playBurstBtn" class="control-button mini-game-button">Temporal Burst ⚡</button>
+            <button id="forgeArtifactBtn" class="control-button forge-button">Forge Artifact 🔨</button>
+        </div>
+
+        <div id="gameMessage" class="game-message"></div>
+
+        <div class="controls">
+            <button id="startButton" class="control-button">Start Game</button>
+            <button id="restartButton" class="control-button" style="display: none;">Play Again</button>
+        </div>
+
+        <div class="forged-artifacts-section">
+            <div class="section-title">Forged Artifacts</div>
+            <div class="forged-artifacts-display" id="forgedArtifactsDisplay">
+                <!-- Forged artifact icons will appear here -->
+            </div>
+        </div>
+
+        <div class="forged-arsenal-section">
+            <div class="section-title">Your Forged Arsenal</div>
+            <div class="forged-arsenal-display" id="forgedArsenalDisplay">
+                <!-- Forged artifacts with activation buttons will appear here -->
+            </div>
+        </div>
+
+        <div class="active-powerups-section">
+            <div class="section-title">Active Power-ups</div>
+            <div class="active-powerups-display" id="activePowerupsDisplay">
+                <!-- Active power-ups with timers will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Temporal Alignment QTE Overlay -->
+    <div id="qteOverlay" class="qte-overlay">
+        <div class="qte-box">
+            <div class="qte-message" id="qteResultDisplay">Align the Temporal Flow!</div>
+            <div class="qte-bar-container">
+                <div class="qte-target-zone"></div>
+                <div class="qte-indicator" id="qteIndicator"></div>
+            </div>
+            <button id="qteAlignButton" class="qte-align-button">Align!</button>
+        </div>
+    </div>
+
+    <!-- Temporal Burst Overlay -->
+    <div id="temporalBurstOverlay" class="qte-overlay">
+        <div class="qte-box">
+            <div class="qte-message" id="burstResultDisplay">Rapidly Tap to Burst!</div>
+            <div class="burst-area">
+                <span id="burstEssenceIcon" class="burst-icon"></span>
+                <div class="burst-stats">
+                    Clicks: <span id="burstClickCount">0</span><br>
+                    Time: <span id="burstTimer">3.0</span>s
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const temporalEnergyDisplay = document.getElementById('temporalEnergy');
+        const timeRemainingDisplay = document.getElementById('timeRemaining');
+        const artifactsForgedDisplay = document.getElementById('artifactsForged');
+        const currentZoneDisplay = document.getElementById('currentZoneDisplay');
+        const prehistoricBtn = document.getElementById('prehistoricBtn');
+        const medievalBtn = document.getElementById('medievalBtn');
+        const futuristicBtn = document.getElementById('futuristicBtn');
+        const inventoryDisplay = document.getElementById('inventoryDisplay');
+        const recipeNameDisplay = document.getElementById('recipeName');
+        const recipeRequirementsDisplay = document.getElementById('recipeRequirements');
+        const gatherEssenceBtn = document.getElementById('gatherEssenceBtn');
+        const forgeArtifactBtn = document.getElementById('forgeArtifactBtn');
+        const gameMessage = document.getElementById('gameMessage');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const forgedArtifactsDisplay = document.getElementById('forgedArtifactsDisplay');
+
+        // New mini-game buttons
+        const playAlignmentBtn = document.getElementById('playAlignmentBtn');
+        const playBurstBtn = document.getElementById('playBurstBtn');
+
+        // QTE Elements (Temporal Alignment)
+        const qteOverlay = document.getElementById('qteOverlay');
+        const qteIndicator = document.getElementById('qteIndicator');
+        const qteAlignButton = document.getElementById('qteAlignButton');
+        const qteBarContainer = document.querySelector('.qte-bar-container');
+        const qteTargetZone = document.querySelector('.qte-target-zone');
+        const qteResultDisplay = document.getElementById('qteResultDisplay');
+
+        // Temporal Burst Elements
+        const temporalBurstOverlay = document.getElementById('temporalBurstOverlay');
+        const burstEssenceIcon = document.getElementById('burstEssenceIcon');
+        const burstClickCountDisplay = document.getElementById('burstClickCount');
+        const burstTimerDisplay = document.getElementById('burstTimer');
+        const burstResultDisplay = document.getElementById('burstResultDisplay');
+
+        // Power-up Elements
+        const forgedArsenalDisplay = document.getElementById('forgedArsenalDisplay'); // New
+        const activePowerupsDisplay = document.getElementById('activePowerupsDisplay'); // New
+
+        // --- Game State Variables ---
+        let temporalEnergy = 100;
+        let timeRemaining = 120; // 2 minutes
+        let artifactsForged = 0;
+        let currentZone = 'Temporal Nexus'; // Starting zone
+        let inventory = {
+            '🔥': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 },
+            '💧': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 },
+            '🌳': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 },
+            '💨': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 }
+        };
+        const MAX_INVENTORY_SLOT = 5; // Max 5 of each specific essence type
+        const MAX_TOTAL_INVENTORY = 20; // Max total essences
+        let currentRecipe = null;
+        let gameActive = false;
+        let gameTimerInterval;
+        let temporalInstabilityActive = false;
+        let blockedZone = null; // Which zone is currently blocked by instability
+
+        // QTE State Variables (Temporal Alignment)
+        let qteAnimationId = null;
+        let qteIndicatorPosition = 0;
+        let qteIndicatorDirection = 1; // 1 for right, -1 for left
+        const qteSpeed = 5; // Pixels per frame
+        const qteIndicatorWidth = 10; // Width of the moving indicator
+        const qteTargetZonePercentage = 0.3; // 30% of the bar width (increased for better playability)
+
+        // Temporal Burst State Variables
+        let burstClickCount = 0;
+        let burstTimeLeft = 0;
+        let burstTimerInterval = null;
+        const BURST_DURATION = 3; // seconds
+        const BURST_SUCCESS_CLICKS = 5;
+        const BURST_PERFECT_CLICKS = 10;
+
+        // Power-up State Variables
+        let forgedArtifacts = []; // Stores { id: uniqueId, recipe: recipeObject, cooldown: 0 }
+        let activePowerUps = []; // Stores { type: 'compass', duration: 10, originalTravelCost: 10 } etc.
+        const ARTIFACT_COOLDOWNS = { // Cooldowns in seconds
+            "Temporal Compass": 30,
+            "Aetherial Orb": 30,
+            "Chronos Shard": 30
+        };
+        const POWERUP_DURATIONS = { // Durations in seconds
+            "Temporal Compass": 10,
+            "Aetherial Orb": 10,
+            "Chronos Shard": 5
+        };
+
+        // --- Game Data ---
+        const essences = ['🔥', '💧', '🌳', '💨'];
+        const zones = {
+            'prehistoric': { name: 'Prehistoric 🦖', energyCost: 10, commonEssence: '🌳' },
+            'medieval': { name: 'Medieval 🏰', energyCost: 10, commonEssence: '💧' },
+            'futuristic': { name: 'Futuristic 🚀', energyCost: 10, commonEssence: '💨' }
+        };
+
+        const recipes = [
+            {
+                name: "Temporal Compass",
+                icon: "🧭",
+                requirements: [
+                    { essence: '🔥', zone: 'prehistoric', quantity: 2 },
+                    { essence: '💧', zone: 'medieval', quantity: 1 }
+                ],
+                powerUpType: "Temporal Compass"
+            },
+            {
+                name: "Aetherial Orb",
+                icon: "🔮",
+                requirements: [
+                    { essence: '💨', zone: 'futuristic', quantity: 3 },
+                    { essence: '🌳', zone: 'prehistoric', quantity: 1 }
+                ],
+                powerUpType: "Aetherial Orb"
+            },
+            {
+                name: "Chronos Shard",
+                icon: "💎",
+                requirements: [
+                    { essence: '💧', zone: 'futuristic', quantity: 2 },
+                    { essence: '🔥', zone: 'medieval', quantity: 2 }
+                ],
+                powerUpType: "Chronos Shard"
+            },
+            {
+                name: "Reality Anchor",
+                icon: "⚓",
+                requirements: [
+                    { essence: '🌳', zone: 'medieval', quantity: 2 },
+                    { essence: '💨', zone: 'prehistoric', quantity: 2 },
+                    { essence: '🔥', zone: 'futuristic', quantity: 1 }
+                ],
+                powerUpType: "None" // Example: no power-up yet for this
+            },
+            {
+                name: "Echoing Scroll",
+                icon: "📜",
+                requirements: [
+                    { essence: '💧', zone: 'prehistoric', quantity: 3 },
+                    { essence: '🌳', zone: 'futuristic', quantity: 1 }
+                ],
+                powerUpType: "None"
+            },
+            {
+                name: "Quantum Key",
+                icon: "🗝️",
+                requirements: [
+                    { essence: '🔥', zone: 'futuristic', quantity: 2 },
+                    { essence: '💨', zone: 'medieval', quantity: 2 },
+                    { essence: '💧', zone: 'prehistoric', quantity: 1 }
+                ],
+                powerUpType: "None"
+            }
+        ];
+
+        let availableRecipes = [...recipes]; // Copy to modify during game
+
+        // --- Game Functions ---
+
+        /**
+         * Hides the main game message.
+         */
+        function hideMessage() {
+            gameMessage.style.display = 'none';
+        }
+
+        /**
+         * Generates a unique ID for forged artifacts.
+         * @returns {string} A unique ID.
+         */
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        }
+
+        /**
+         * Initializes the game state and sets up event listeners.
+         */
+        function initGame() {
+            // Event listeners for time zone buttons
+            prehistoricBtn.addEventListener('click', () => travelToZone('prehistoric'));
+            medievalBtn.addEventListener('click', () => travelToZone('medieval'));
+            futuristicBtn.addEventListener('click', () => travelToZone('futuristic'));
+
+            // Event listeners for action buttons
+            gatherEssenceBtn.addEventListener('click', gatherEssenceSimple);
+            forgeArtifactBtn.addEventListener('click', forgeArtifact);
+
+            // Event listeners for new mini-game buttons
+            playAlignmentBtn.addEventListener('click', startTemporalAlignmentQTE);
+            playBurstBtn.addEventListener('click', startTemporalBurstQTE);
+
+            // Event listeners for game control buttons
+            startButton.addEventListener('click', startGame);
+            restartButton.addEventListener('click', startGame);
+
+            // QTE event listener (Temporal Alignment)
+            qteAlignButton.addEventListener('click', stopTemporalAlignmentQTE);
+
+            // Temporal Burst event listener
+            burstEssenceIcon.addEventListener('click', incrementBurstClick);
+
+            updateUI(); // Initial UI update
+            disableGameActions(); // Disable actions until game starts
+
+            // Display initial instruction message
+            showMessage('Click "Start Game" to begin your Temporal Alchemist journey!', 'lightblue');
+            gameMessage.style.display = 'block'; // Ensure it's visible on load
+            startButton.style.display = 'block'; // Ensure start button is visible
+            restartButton.style.display = 'none'; // Ensure restart button is hidden
+        }
+
+        /**
+         * Starts a new game, resetting all variables.
+         */
+        function startGame() {
+            temporalEnergy = 100;
+            timeRemaining = 120;
+            artifactsForged = 0;
+            currentZone = 'Temporal Nexus';
+            inventory = {
+                '🔥': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 },
+                '💧': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 },
+                '🌳': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 },
+                '💨': { count: 0, prehistoric: 0, medieval: 0, futuristic: 0 }
+            };
+            availableRecipes = [...recipes]; // Reset available recipes
+            forgedArtifacts = []; // Clear forged artifacts
+            activePowerUps = []; // Clear active power-ups
+            gameActive = true;
+            temporalInstabilityActive = false;
+            blockedZone = null;
+
+            hideMessage(); // Hide any existing message
+            startButton.style.display = 'none';
+            restartButton.style.display = 'none';
+            enableGameActions(); // Enable actions when game starts
+
+            clearInterval(gameTimerInterval); // Clear any previous timer
+            gameTimerInterval = setInterval(gameTick, 1000); // Game tick every second
+
+            generateNewRecipe(); // Get the first recipe
+            updateUI(); // Update UI with new game state
+        }
+
+        /**
+         * The main game loop, called every second.
+         */
+        function gameTick() {
+            if (!gameActive) return;
+
+            // Handle Chronos Shard (Time Dilation) power-up
+            const timeDilationActive = activePowerUps.some(pu => pu.type === "Chronos Shard");
+            if (!timeDilationActive) {
+                timeRemaining--;
+            }
+
+            temporalEnergy = Math.min(100, temporalEnergy + 1); // Regenerate 1 energy per second, max 100
+
+            // Update active power-up durations
+            activePowerUps = activePowerUps.filter(pu => {
+                pu.duration--;
+                if (pu.duration <= 0) {
+                    showMessage(`${pu.name} power-up ended!`, 'grey');
+                    return false; // Remove expired power-up
+                }
+                return true;
+            });
+
+            // Update forged artifact cooldowns
+            forgedArtifacts.forEach(artifact => {
+                if (artifact.cooldown > 0) {
+                    artifact.cooldown--;
+                }
+            });
+
+            // Temporal Instability event
+            // Only trigger if no Reality Anchor is active (if implemented) and not already unstable
+            if (Math.random() < 0.03 && !temporalInstabilityActive) { // 3% chance per second
+                triggerTemporalInstability();
+            }
+
+            updateUI();
+
+            if (timeRemaining <= 0) {
+                endGame(false); // Time's up
+            }
+        }
+
+        /**
+         * Triggers a temporal instability event, blocking a random zone for a short period.
+         */
+        function triggerTemporalInstability() {
+            temporalInstabilityActive = true;
+            const zoneKeys = Object.keys(zones);
+            blockedZone = zoneKeys[Math.floor(Math.random() * zoneKeys.length)];
+            const blockedZoneName = zones[blockedZone].name.split(' ')[0]; // Get just the name, not emoji
+            showMessage(`Temporal Instability! ${blockedZoneName} zone is unstable for 10 seconds!`, 'red');
+
+            // Disable the blocked zone button
+            document.querySelector(`[data-zone="${blockedZone}"]`).classList.add('disabled');
+
+            setTimeout(() => {
+                temporalInstabilityActive = false;
+                showMessage(`Temporal Instability in ${blockedZoneName} has passed!`, 'green');
+                // Re-enable the blocked zone button
+                document.querySelector(`[data-zone="${blockedZone}"]`).classList.remove('disabled');
+                blockedZone = null;
+            }, 10000); // Blocked for 10 seconds
+        }
+
+        /**
+         * Updates all UI elements based on the current game state.
+         */
+        function updateUI() {
+            temporalEnergyDisplay.textContent = temporalEnergy;
+            timeRemainingDisplay.textContent = timeRemaining;
+            artifactsForgedDisplay.textContent = artifactsForged;
+            currentZoneDisplay.textContent = currentZone;
+
+            // Update inventory display
+            inventoryDisplay.innerHTML = '';
+            for (const essence of essences) {
+                const slot = document.createElement('div');
+                slot.classList.add('essence-slot');
+                slot.innerHTML = `
+                    <span>${essence}</span>
+                    <span class="essence-count">${inventory[essence].count}</span>
+                    <button class="discard-button" data-essence="${essence}" ${inventory[essence].count === 0 ? 'disabled' : ''}>-</button>
+                `;
+                inventoryDisplay.appendChild(slot);
+
+                // Add event listener to the newly created discard button
+                const discardBtn = slot.querySelector('.discard-button');
+                if (discardBtn) {
+                    discardBtn.addEventListener('click', (event) => {
+                        const essenceToDiscard = event.target.dataset.essence;
+                        discardEssence(essenceToDiscard);
+                    });
+                }
+            }
+
+            // Update recipe requirements display
+            recipeRequirementsDisplay.innerHTML = '';
+            if (currentRecipe) {
+                recipeNameDisplay.textContent = `${currentRecipe.icon} ${currentRecipe.name}`;
+                currentRecipe.requirements.forEach(req => {
+                    const reqItem = document.createElement('div');
+                    reqItem.classList.add('requirement-item');
+                    const currentCount = inventory[req.essence][req.zone];
+                    const isMet = currentCount >= req.quantity;
+                    if (isMet) {
+                        reqItem.classList.add('met');
+                    }
+                    reqItem.innerHTML = `
+                        <span>${req.essence} x${req.quantity}</span>
+                        <span>(${zones[req.zone].name.split(' ')[0]})</span>
+                        <span style="font-size:0.8em; color: ${isMet ? '#4CAF50' : '#ffc107'};">${currentCount}/${req.quantity}</span>
+                    `;
+                    recipeRequirementsDisplay.appendChild(reqItem);
+                });
+            } else {
+                recipeNameDisplay.textContent = "No more recipes!";
+                recipeRequirementsDisplay.innerHTML = "<p>You've forged all available artifacts!</p>";
+            }
+
+            // Update button states
+            Object.keys(zones).forEach(zoneKey => {
+                const btn = document.querySelector(`[data-zone="${zoneKey}"]`);
+                // Check for Temporal Compass power-up
+                const temporalCompassActive = activePowerUps.some(pu => pu.type === "Temporal Compass");
+                const currentTravelCost = temporalCompassActive ? 0 : zones[zoneKey].energyCost;
+
+                if (temporalEnergy < currentTravelCost || (temporalInstabilityActive && blockedZone === zoneKey)) {
+                    btn.classList.add('disabled');
+                } else {
+                    btn.classList.remove('disabled');
+                }
+            });
+
+            // Gather buttons enabled only if in a time zone (not nexus) and no QTE is active
+            const inTimeZone = currentZone !== 'Temporal Nexus';
+            const qteActive = qteOverlay.style.display === 'flex' || temporalBurstOverlay.style.display === 'flex';
+
+            if (!gameActive || !inTimeZone || temporalInstabilityActive || qteActive) {
+                gatherEssenceBtn.classList.add('disabled');
+                playAlignmentBtn.classList.add('disabled');
+                playBurstBtn.classList.add('disabled');
+            } else {
+                gatherEssenceBtn.classList.remove('disabled');
+                playAlignmentBtn.classList.remove('disabled');
+                playBurstBtn.classList.remove('disabled');
+            }
+
+            // Update forged artifacts display (simple icons)
+            forgedArtifactsDisplay.innerHTML = '';
+            forgedArtifacts.forEach(artifact => {
+                const iconElement = document.createElement('span');
+                iconElement.classList.add('forged-artifact-icon');
+                iconElement.textContent = artifact.recipe.icon;
+                forgedArtifactsDisplay.appendChild(iconElement);
+            });
+
+            // Update forged arsenal display (activatable power-ups)
+            forgedArsenalDisplay.innerHTML = '';
+            forgedArtifacts.forEach(artifact => {
+                if (artifact.recipe.powerUpType !== "None") {
+                    const item = document.createElement('div');
+                    item.classList.add('arsenal-artifact-item');
+                    item.dataset.artifactId = artifact.id; // Store unique ID
+                    item.innerHTML = `
+                        <span class="arsenal-artifact-icon">${artifact.recipe.icon}</span>
+                        <span class="arsenal-artifact-name">${artifact.recipe.name}</span>
+                        <span class="arsenal-cooldown" style="display: ${artifact.cooldown > 0 ? 'block' : 'none'};">${artifact.cooldown}s</span>
+                    `;
+
+                    if (artifact.cooldown > 0 || !gameActive || qteActive) {
+                        item.classList.add('disabled');
+                    } else {
+                        item.classList.remove('disabled');
+                        item.addEventListener('click', () => activatePowerUp(artifact.id));
+                    }
+                    forgedArsenalDisplay.appendChild(item);
+                }
+            });
+
+            // Update active power-ups display
+            activePowerupsDisplay.innerHTML = '';
+            activePowerUps.forEach(pu => {
+                const item = document.createElement('div');
+                item.classList.add('active-powerup-item');
+                item.innerHTML = `
+                    <span class="active-powerup-icon">${pu.icon}</span>
+                    <span>${pu.name}:</span>
+                    <span class="active-powerup-timer">${pu.duration}s</span>
+                `;
+                activePowerupsDisplay.appendChild(item);
+            });
+        }
+
+        /**
+         * Handles traveling to a new time zone.
+         * @param {string} zoneKey - The key of the zone to travel to (e.g., 'prehistoric').
+         */
+        function travelToZone(zoneKey) {
+            if (!gameActive || temporalInstabilityActive && blockedZone === zoneKey) {
+                return;
+            }
+
+            const zone = zones[zoneKey];
+            const temporalCompassActive = activePowerUps.some(pu => pu.type === "Temporal Compass");
+            const currentTravelCost = temporalCompassActive ? 0 : zone.energyCost;
+
+            if (temporalEnergy >= currentTravelCost) {
+                temporalEnergy -= currentTravelCost;
+                currentZone = zone.name;
+                showMessage(`Traveled to ${zone.name}!`, 'lightblue');
+            } else {
+                showMessage('Not enough Temporal Energy!', 'orange');
+            }
+            updateUI();
+        }
+
+        /**
+         * Simple essence gathering by clicking a button.
+         */
+        function gatherEssenceSimple() {
+            if (!gameActive || currentZone === 'Temporal Nexus' || temporalInstabilityActive) {
+                showMessage('Cannot gather here or during instability!', 'orange');
+                return;
+            }
+
+            const currentZoneKey = Object.keys(zones).find(key => zones[key].name === currentZone);
+            if (!currentZoneKey) return;
+
+            const totalEssencesInInventory = Object.values(inventory).reduce((sum, type) => sum + type.count, 0);
+            if (totalEssencesInInventory >= MAX_TOTAL_INVENTORY) {
+                showMessage('Inventory is full! Discard essences to make space.', 'orange');
+                return;
+            }
+
+            const commonEssence = zones[currentZoneKey].commonEssence;
+            let gatheredEssence;
+            if (Math.random() < 0.7) { // 70% chance for common essence
+                gatheredEssence = commonEssence;
+            } else { // 30% chance for any other random essence
+                const otherEssences = essences.filter(e => e !== commonEssence);
+                gatheredEssence = otherEssences[Math.floor(Math.random() * otherEssences.length)];
+            }
+
+            // Check for Aetherial Orb power-up
+            const aetherialOrbActive = activePowerUps.some(pu => pu.type === "Aetherial Orb");
+            let quantityToGrant = aetherialOrbActive ? 2 : 1; // Double if Aetherial Orb is active
+
+            let actualGranted = 0;
+            for (let i = 0; i < quantityToGrant; i++) {
+                if (inventory[gatheredEssence][currentZoneKey] < MAX_INVENTORY_SLOT && totalEssencesInInventory + actualGranted < MAX_TOTAL_INVENTORY) {
+                    inventory[gatheredEssence].count++;
+                    inventory[gatheredEssence][currentZoneKey]++;
+                    actualGranted++;
+                } else {
+                    if (actualGranted > 0) { // If some were granted before hitting limit
+                        showMessage(`Gathered ${actualGranted} ${gatheredEssence} from ${currentZone.split(' ')[0]} (inventory full for bonus)!`, 'orange');
+                    } else {
+                        showMessage(`Can't carry more ${gatheredEssence} from this zone! Max ${MAX_INVENTORY_SLOT} per type/zone or total inventory full.`, 'orange');
+                    }
+                    break;
+                }
+            }
+
+            if (actualGranted > 0) {
+                showMessage(`Gathered ${actualGranted} ${gatheredEssence} from ${currentZone.split(' ')[0]}!`, 'lightgreen');
+            } else if (totalEssencesInInventory >= MAX_TOTAL_INVENTORY) {
+                // Message already shown above for full inventory
+            } else {
+                showMessage(`Failed to gather ${gatheredEssence}.`, 'red'); // Should not happen with current logic but good fallback
+            }
+            updateUI();
+        }
+
+
+        /**
+         * Discards one unit of a specified essence.
+         * For simplicity, this removes one from the total count and one from *any* zone it came from.
+         * A more complex system would ask which zone to discard from, but this is a good start.
+         * @param {string} essenceType - The emoji string of the essence to discard.
+         */
+        function discardEssence(essenceType) {
+            if (!gameActive || inventory[essenceType].count === 0) {
+                showMessage('Cannot discard this essence.', 'red');
+                return;
+            }
+
+            inventory[essenceType].count--;
+
+            // Find one unit from any zone to decrement
+            let discardedFromZone = false;
+            for (const zoneKey in zones) {
+                if (inventory[essenceType][zoneKey] > 0) {
+                    inventory[essenceType][zoneKey]--;
+                    discardedFromZone = true;
+                    break; // Only discard one unit
+                }
+            }
+
+            if (discardedFromZone) {
+                showMessage(`Discarded 1 ${essenceType}.`, 'grey');
+            } else {
+                // This case should ideally not be hit if count > 0, but as a fallback
+                showMessage(`Discarded 1 ${essenceType} (origin unknown).`, 'grey');
+            }
+            updateUI();
+        }
+
+
+        /**
+         * Attempts to forge the current artifact if requirements are met.
+         */
+        function forgeArtifact() {
+            if (!gameActive || !currentRecipe) {
+                showMessage('No artifact to forge or game not active!', 'orange');
+                return;
+            }
+
+            let canForge = true;
+            const tempInventory = JSON.parse(JSON.stringify(inventory)); // Create a deep copy for checking
+
+            currentRecipe.requirements.forEach(req => {
+                if (tempInventory[req.essence][req.zone] < req.quantity) {
+                    canForge = false;
+                }
+            });
+
+            if (canForge) {
+                // Consume essences
+                currentRecipe.requirements.forEach(req => {
+                    inventory[req.essence].count -= req.quantity;
+                    inventory[req.essence][req.zone] -= req.quantity;
+                });
+                artifactsForged++;
+                // Add the forged artifact to the forgedArtifacts array
+                forgedArtifacts.push({
+                    id: generateUniqueId(), // Assign a unique ID
+                    recipe: currentRecipe,
+                    cooldown: 0 // Initially not on cooldown
+                });
+                showMessage(`Successfully forged ${currentRecipe.icon} ${currentRecipe.name}!`, 'gold');
+                generateNewRecipe();
+            } else {
+                showMessage('Not enough essences or wrong temporal origins!', 'red');
+            }
+            updateUI();
+        }
+
+        /**
+         * Selects a new random recipe from the available ones.
+         */
+        function generateNewRecipe() {
+            if (availableRecipes.length === 0) {
+                currentRecipe = null;
+                endGame(true); // All recipes forged!
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * availableRecipes.length);
+            currentRecipe = availableRecipes[randomIndex];
+            availableRecipes.splice(randomIndex, 1); // Remove from available list
+        }
+
+        /**
+         * Ends the game and displays the final message.
+         * @param {boolean} won - True if the player won (all artifacts forged), false if time ran out.
+         */
+        function endGame(won) {
+            gameActive = false;
+            clearInterval(gameTimerInterval);
+            disableGameActions(); // Disable all game action buttons
+
+            if (won) {
+                showMessage(`Game Over! You forged all ${artifactsForged} artifacts! A true Temporal Alchemist!`, 'green');
+            } else {
+                showMessage(`Game Over! Time ran out. You forged ${artifactsForged} artifacts. Try again!`, 'red');
+            }
+            restartButton.style.display = 'block';
+        }
+
+        /**
+         * Displays a temporary message to the user.
+         * @param {string} msg - The message to display.
+         * @param {string} color - The color of the message text.
+         */
+        function showMessage(msg, color) {
+            gameMessage.textContent = msg;
+            gameMessage.style.color = color;
+            gameMessage.style.borderColor = color;
+            gameMessage.style.display = 'block';
+            setTimeout(() => {
+                gameMessage.style.display = 'none';
+            }, 3000); // Message disappears after 3 seconds
+        }
+
+        /**
+         * Disables all game action buttons.
+         */
+        function disableGameActions() {
+            gatherEssenceBtn.classList.add('disabled');
+            forgeArtifactBtn.classList.add('disabled');
+            prehistoricBtn.classList.add('disabled');
+            medievalBtn.classList.add('disabled');
+            futuristicBtn.classList.add('disabled');
+            playAlignmentBtn.classList.add('disabled'); // Disable new mini-game buttons
+            playBurstBtn.classList.add('disabled');       // Disable new mini-game buttons
+        }
+
+        /**
+         * Enables all game action buttons.
+         */
+        function enableGameActions() {
+            gatherEssenceBtn.classList.remove('disabled');
+            forgeArtifactBtn.classList.remove('disabled');
+            prehistoricBtn.classList.remove('disabled');
+            medievalBtn.classList.remove('disabled');
+            futuristicBtn.classList.remove('disabled');
+            playAlignmentBtn.classList.remove('disabled'); // Enable new mini-game buttons
+            playBurstBtn.classList.remove('disabled');       // Enable new mini-game buttons
+        }
+
+        /**
+         * Grants essence to the player based on success and perfect hit.
+         * @param {boolean} success - True if the mini-game was successful.
+         * @param {boolean} perfect - True if the mini-game was a perfect hit.
+         * @param {number} baseQuantity - The base number of essences to grant on success.
+         */
+        function grantEssenceBasedOnOutcome(success, perfect, baseQuantity) {
+            if (!success) {
+                // Message already handled in mini-game specific functions
+                return;
+            }
+
+            const currentZoneKey = Object.keys(zones).find(key => zones[key].name === currentZone);
+            if (!currentZoneKey) return;
+
+            const commonEssence = zones[currentZoneKey].commonEssence;
+            let gatheredEssence;
+
+            // Logic for which essence is gathered (biased towards common)
+            if (Math.random() < 0.7) { // 70% chance for common essence
+                gatheredEssence = commonEssence;
+            } else { // 30% chance for any other random essence
+                const otherEssences = essences.filter(e => e !== commonEssence);
+                gatheredEssence = otherEssences[Math.floor(Math.random() * otherEssences.length)];
+            }
+
+            let quantityToGrant = baseQuantity;
+            if (perfect) {
+                quantityToGrant += 1; // Bonus for perfect hit
+            }
+
+            // Check for Aetherial Orb power-up
+            const aetherialOrbActive = activePowerUps.some(pu => pu.type === "Aetherial Orb");
+            if (aetherialOrbActive) {
+                quantityToGrant *= 2; // Double if Aetherial Orb is active
+            }
+
+            const totalEssencesInInventory = Object.values(inventory).reduce((sum, type) => sum + type.count, 0);
+
+            if (totalEssencesInInventory + quantityToGrant > MAX_TOTAL_INVENTORY) {
+                showMessage('Inventory is full! Discard essences to make space.', 'orange');
+                updateUI(); // Update UI to reflect full inventory
+                return;
+            }
+
+            let actualGranted = 0;
+            for (let i = 0; i < quantityToGrant; i++) {
+                if (inventory[gatheredEssence][currentZoneKey] < MAX_INVENTORY_SLOT) {
+                    inventory[gatheredEssence].count++;
+                    inventory[gatheredEssence][currentZoneKey]++;
+                    actualGranted++;
+                } else {
+                    showMessage(`Can't carry more ${gatheredEssence} from this zone! Max ${MAX_INVENTORY_SLOT} per type/zone.`, 'orange');
+                    break; // Stop granting if slot is full
+                }
+            }
+
+            if (actualGranted > 0) {
+                let message = '';
+                if (perfect && actualGranted > baseQuantity) {
+                    message = `Perfect! Gathered ${actualGranted} ${gatheredEssence} from ${currentZone.split(' ')[0]}!`;
+                    showMessage(message, 'gold');
+                } else {
+                    message = `Gathered ${actualGranted} ${gatheredEssence} from ${currentZone.split(' ')[0]}!`;
+                    showMessage(message, 'lightgreen');
+                }
+            } else if (success) { // If it was a success but nothing was added due to inventory
+                showMessage(`Gathering successful, but inventory limits prevented adding more ${gatheredEssence}.`, 'orange');
+            }
+            updateUI(); // Ensure UI is updated after granting essence
+        }
+
+        // --- Temporal Alignment QTE Functions ---
+
+        /**
+         * Starts the Temporal Alignment QTE mini-game.
+         */
+        function startTemporalAlignmentQTE() {
+            if (!gameActive || currentZone === 'Temporal Nexus' || temporalInstabilityActive) {
+                showMessage('Cannot start mini-game here or during instability!', 'orange');
+                return;
+            }
+            const totalEssencesInInventory = Object.values(inventory).reduce((sum, type) => sum + type.count, 0);
+            if (totalEssencesInInventory >= MAX_TOTAL_INVENTORY) {
+                showMessage('Inventory is full! Discard essences to make space.', 'orange');
+                return;
+            }
+
+            qteOverlay.style.display = 'flex';
+            disableGameActions(); // Disable main game buttons during QTE
+
+            // Reset indicator position and direction
+            qteIndicatorPosition = 0;
+            qteIndicatorDirection = 1;
+            qteIndicator.style.left = '0px';
+            qteAlignButton.disabled = false; // Ensure button is enabled for new QTE
+            qteResultDisplay.textContent = 'Align the Temporal Flow!'; // Reset message
+            qteResultDisplay.style.color = '#f0f0f0'; // Reset color
+
+            // Calculate target zone position and width dynamically
+            const barWidth = qteBarContainer.offsetWidth;
+            const targetZoneWidth = barWidth * qteTargetZonePercentage;
+            const targetZoneStart = (barWidth / 2) - (targetZoneWidth / 2);
+            qteTargetZone.style.width = `${targetZoneWidth}px`;
+            qteTargetZone.style.left = `${targetZoneStart}px`;
+
+            // Start animation loop
+            qteAnimationId = requestAnimationFrame(animateQTE);
+        }
+
+        /**
+         * Animation loop for the QTE indicator.
+         */
+        function animateQTE() {
+            const barWidth = qteBarContainer.offsetWidth;
+            const maxPosition = barWidth - qteIndicatorWidth;
+
+            qteIndicatorPosition += qteSpeed * qteIndicatorDirection;
+
+            // Reverse direction if hitting boundaries
+            if (qteIndicatorPosition >= maxPosition || qteIndicatorPosition <= 0) {
+                qteIndicatorDirection *= -1;
+                qteIndicatorPosition = Math.max(0, Math.min(maxPosition, qteIndicatorPosition)); // Clamp to boundaries
+            }
+
+            qteIndicator.style.left = `${qteIndicatorPosition}px`;
+            qteAnimationId = requestAnimationFrame(animateQTE);
+        }
+
+        /**
+         * Stops the QTE and processes the result.
+         */
+        function stopTemporalAlignmentQTE() {
+            cancelAnimationFrame(qteAnimationId);
+            qteAlignButton.disabled = true; // Disable button after click
+
+            const barWidth = qteBarContainer.offsetWidth;
+            const targetZoneWidth = qteTargetZone.offsetWidth; // Use actual rendered width
+            const targetZoneStart = qteTargetZone.offsetLeft; // Use actual rendered position
+
+            // Indicator's left and right edges
+            const indicatorLeft = qteIndicatorPosition;
+            const indicatorRight = qteIndicatorPosition + qteIndicatorWidth;
+
+            let isSuccess = false;
+            let isPerfect = false;
+
+            // Check for overlap between indicator and target zone using inclusive bounds
+            if (indicatorRight >= targetZoneStart && indicatorLeft <= (targetZoneStart + targetZoneWidth)) {
+                isSuccess = true;
+
+                // For perfect hit, check if the indicator's center is within a smaller 'perfect' zone
+                // This perfect zone is centered within the *green target zone*
+                const perfectZoneInnerWidth = targetZoneWidth * 0.3; // 30% of the green zone width
+                const perfectZoneStartAbsolute = targetZoneStart + (targetZoneWidth / 2) - (perfectZoneInnerWidth / 2);
+                const perfectZoneEndAbsolute = perfectZoneStartAbsolute + perfectZoneInnerWidth;
+
+                const indicatorCenter = qteIndicatorPosition + (qteIndicatorWidth / 2);
+
+                if (indicatorCenter >= perfectZoneStartAbsolute && indicatorCenter <= perfectZoneEndAbsolute) {
+                    isPerfect = true;
+                }
+            }
+
+            // Display result message in the QTE overlay
+            let resultMessage = '';
+            let resultColor = '';
+            if (isSuccess) {
+                if (isPerfect) {
+                    resultMessage = 'PERFECT ALIGNMENT!';
+                    resultColor = 'gold';
+                } else {
+                    resultMessage = 'SUCCESS!';
+                    resultColor = 'lightgreen';
+                }
+            } else {
+                resultMessage = 'FAILED!';
+                resultColor = 'red';
+            }
+            qteResultDisplay.textContent = resultMessage;
+            qteResultDisplay.style.color = resultColor;
+
+            // Keep QTE overlay visible briefly to show result, then hide
+            setTimeout(() => {
+                qteOverlay.style.display = 'none';
+                enableGameActions(); // Re-enable main game buttons
+                // Process the essence gathering after the message has been shown
+                grantEssenceBasedOnOutcome(isSuccess, isPerfect, 1); // Base quantity of 1 essence
+            }, 1000); // Show result for 1 second before hiding
+        }
+
+        // --- Temporal Burst Functions ---
+
+        /**
+         * Starts the Temporal Burst mini-game.
+         */
+        function startTemporalBurstQTE() {
+            if (!gameActive || currentZone === 'Temporal Nexus' || temporalInstabilityActive) {
+                showMessage('Cannot start mini-game here or during instability!', 'orange');
+                return;
+            }
+            const totalEssencesInInventory = Object.values(inventory).reduce((sum, type) => sum + type.count, 0);
+            if (totalEssencesInInventory >= MAX_TOTAL_INVENTORY) {
+                showMessage('Inventory is full! Discard essences to make space.', 'orange');
+                return;
+            }
+
+            temporalBurstOverlay.style.display = 'flex';
+            disableGameActions(); // Disable main game buttons during QTE
+
+            burstClickCount = 0;
+            burstTimeLeft = BURST_DURATION;
+            burstClickCountDisplay.textContent = burstClickCount;
+            burstTimerDisplay.textContent = burstTimeLeft.toFixed(1);
+            burstResultDisplay.textContent = 'Rapidly Tap to Burst!';
+            burstResultDisplay.style.color = '#f0f0f0';
+
+            // Randomly pick an essence icon for the burst
+            const randomEssenceIcon = essences[Math.floor(Math.random() * essences.length)];
+            burstEssenceIcon.textContent = randomEssenceIcon;
+
+            burstEssenceIcon.style.pointerEvents = 'auto'; // Enable clicking on icon
+
+            clearInterval(burstTimerInterval); // Clear any existing timer
+            burstTimerInterval = setInterval(() => {
+                burstTimeLeft -= 0.1;
+                burstTimerDisplay.textContent = burstTimeLeft.toFixed(1);
+                if (burstTimeLeft <= 0) {
+                    clearInterval(burstTimerInterval);
+                    stopTemporalBurstQTE();
+                }
+            }, 100); // Update every 0.1 seconds
+        }
+
+        /**
+         * Increments the click count for Temporal Burst.
+         */
+        function incrementBurstClick() {
+            if (burstTimeLeft > 0) {
+                burstClickCount++;
+                burstClickCountDisplay.textContent = burstClickCount;
+            }
+        }
+
+        /**
+         * Stops the Temporal Burst mini-game and processes the result.
+         */
+        function stopTemporalBurstQTE() {
+            burstEssenceIcon.style.pointerEvents = 'none'; // Disable clicking on icon
+
+            let isSuccess = false;
+            let isPerfect = false;
+            let resultMessage = '';
+            let resultColor = '';
+
+            if (burstClickCount >= BURST_PERFECT_CLICKS) {
+                isSuccess = true;
+                isPerfect = true;
+                resultMessage = 'PERFECT BURST!';
+                resultColor = 'gold';
+            } else if (burstClickCount >= BURST_SUCCESS_CLICKS) {
+                isSuccess = true;
+                resultMessage = 'SUCCESSFUL BURST!';
+                resultColor = 'lightgreen';
+            } else {
+                resultMessage = 'BURST FAILED!';
+                resultColor = 'red';
+            }
+
+            burstResultDisplay.textContent = resultMessage;
+            burstResultDisplay.style.color = resultColor;
+
+            // Keep overlay visible briefly to show result, then hide
+            setTimeout(() => {
+                temporalBurstOverlay.style.display = 'none';
+                enableGameActions(); // Re-enable main game buttons
+                grantEssenceBasedOnOutcome(isSuccess, isPerfect, 1); // Base quantity of 1 essence
+            }, 1000); // Show result for 1 second
+        }
+
+        // --- Power-up Activation Functions ---
+
+        /**
+         * Activates a power-up based on the forged artifact's unique ID.
+         * @param {string} artifactId - The unique ID of the forged artifact to activate.
+         */
+        function activatePowerUp(artifactId) {
+            if (!gameActive) {
+                showMessage('Game is not active!', 'red');
+                return;
+            }
+            if (qteOverlay.style.display === 'flex' || temporalBurstOverlay.style.display === 'flex') {
+                showMessage('Cannot activate power-up during a mini-game!', 'orange');
+                return;
+            }
+
+            const artifactIndex = forgedArtifacts.findIndex(art => art.id === artifactId);
+            if (artifactIndex === -1) {
+                showMessage('Artifact not found!', 'red');
+                return;
+            }
+
+            const artifact = forgedArtifacts[artifactIndex];
+
+            if (artifact.cooldown > 0) {
+                showMessage(`${artifact.recipe.name} is on cooldown for ${artifact.cooldown}s!`, 'orange');
+                return;
+            }
+
+            // Apply the power-up effect
+            const powerUpDuration = POWERUP_DURATIONS[artifact.recipe.powerUpType];
+            if (powerUpDuration) {
+                // Add to active power-ups
+                activePowerUps.push({
+                    type: artifact.recipe.powerUpType,
+                    name: artifact.recipe.name,
+                    icon: artifact.recipe.icon,
+                    duration: powerUpDuration
+                });
+                showMessage(`Activated ${artifact.recipe.icon} ${artifact.recipe.name}!`, 'gold');
+                // Set cooldown for the used artifact
+                artifact.cooldown = ARTIFACT_COOLDOWNS[artifact.recipe.powerUpType];
+            } else {
+                showMessage(`This artifact (${artifact.recipe.name}) has no defined power-up yet!`, 'grey');
+            }
+
+            updateUI();
+        }
+
+        // --- Initial Setup ---
+        window.onload = initGame;
+    </script>
+</body>
+</html>
